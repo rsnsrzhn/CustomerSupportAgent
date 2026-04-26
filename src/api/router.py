@@ -7,7 +7,7 @@ from src.database.models import SupportLog
 from src.api.schemas import QuestionRequest, AnswerResponse
 from src.services.ai_engine import AIEngine
 
-router = APIRouter(prefix="/api/v1", tags=["AI Support"])
+router = APIRouter(tags=["AI Support"])
 ai_bot = AIEngine()
 
 templates = Jinja2Templates(directory="src/templates")
