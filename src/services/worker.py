@@ -8,7 +8,6 @@ from src.core.config import settings
 async def email_polling_worker():
     email_service = EmailService()
     ai_bot = AIEngine()
-    
     MANAGER_EMAIL = settings.EMAIL_MANAGER
 
     while True:
@@ -19,18 +18,18 @@ async def email_polling_worker():
             for letter in new_letters:
                 raw_answer = ai_bot.get_answer(letter['body'])
                 
-                if "ESCALATE" in raw_answer:
+                if raw_answer == "REFUSE":
+                    status = "IGNORED"
+                    final_text = "Извините, я специализируюсь только на вопросах нашего сервиса и не могу ответить на эту тему."
+                
+                elif "ESCALATE" in raw_answer:
                     status = "ESCALATED"
                     final_text = "Здравствуйте! Ваш запрос требует участия специалиста. Наш менеджер свяжется с вами в ближайшее время."
 
-                    alert_subject = f"ALERT: Требуется помощь менеджера ({letter['sender']})"
-                    alert_body = f"""
-                    СРОЧНО: Клиент задал сложный вопрос.
-                    Отправитель: {letter['sender']}
-                    Тема: {letter['subject']}
-                    Сообщение: {letter['body']}
-                    """
+                    alert_subject = f"ALERT: Нужна помощь ({letter['sender']})"
+                    alert_body = f"Клиент: {letter['sender']}\nТема: {letter['subject']}\nВопрос: {letter['body']}"
                     email_service.send_answer(MANAGER_EMAIL, alert_subject, alert_body)
+                
                 else:
                     status = "COMPLETED"
                     final_text = raw_answer
@@ -49,7 +48,7 @@ async def email_polling_worker():
                     subject=letter['subject'],
                     text=final_text
                 )
-                print(f"[Worker] {status} - Email processed for {letter['sender']}")
+                print(f"[Worker] {status} - Processed for {letter['sender']}")
                 
         except Exception as e:
             print(f"[Worker Error] - {e}")

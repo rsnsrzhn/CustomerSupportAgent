@@ -33,4 +33,4 @@ class VectorStoreService:
 
     def get_retriever(self):
         db = Chroma(persist_directory=self.db_path, embedding_function=self.embeddings)
-        return db.as_retriever(search_kwargs={"k": 3})
+        return db.as_retriever(search_kwargs={"k": 6})

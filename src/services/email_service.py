@@ -2,6 +2,7 @@ import imaplib
 import smtplib
 import email
 from email.mime.text import MIMEText
+from email.header import decode_header
 from src.core.config import settings
 
 class EmailService:
@@ -9,50 +10,68 @@ class EmailService:
         self.user = settings.EMAIL_USER
         self.password = settings.EMAIL_PASSWORD
 
+    def _decode_mime_text(self, text):
+        if not text:
+            return ""
+        parts = decode_header(text)
+        decoded_parts = []
+        for part, encoding in parts:
+            if isinstance(part, bytes):
+                decoded_parts.append(part.decode(encoding or "utf-8", errors="ignore"))
+            else:
+                decoded_parts.append(str(part))
+        return "".join(decoded_parts)
+
     def fetch_unread_emails(self) -> list:
         emails_data = []
         try:
             mail = imaplib.IMAP4_SSL(settings.IMAP_SERVER)
-            mail.login(self.user,self.password)
+            mail.login(self.user, self.password)
             mail.select("inbox")
 
-            status,response = mail.search(None,'UNSEEN')
+            status, response = mail.search(None, 'UNSEEN')
             if status != 'OK' or not response[0]:
+                mail.logout()
                 return []
             
             for e_id in response[0].split():
-                _,msg_data = mail.fetch(e_id,'(RFC822)')
+                _, msg_data = mail.fetch(e_id, '(RFC822)')
                 
                 for response_part in msg_data:
                     if isinstance(response_part, tuple):
                         msg = email.message_from_bytes(response_part[1])
-                        subject = msg.get("subject",'Без темы')
-                        sender = msg.get("from")
+                        
+                        subject = self._decode_mime_text(msg.get("subject", "Без темы"))
+                        sender = self._decode_mime_text(msg.get("from", "Неизвестный отправитель"))
                         body = self._extract_body(msg)
 
                         emails_data.append({
                             "id": e_id,
                             "sender": sender,
                             "subject": subject,
-                            "body" :body
+                            "body": body
                         })
 
             mail.logout()
         except Exception as e:
-            print(f"Error IMAP:{e}")
+            print(f"Error IMAP: {e}")
         
         return emails_data
     
-    def _extract_body(self,msg):
+    def _extract_body(self, msg):
         if msg.is_multipart():
             for part in msg.walk():
-                if part.get_content_type() == "text/plain":
-                    return part.get_payload(decode=True).decode()
-        return msg.get_payload(decode=True).decode(errors='ignore')
+                content_type = part.get_content_type()
+                content_disposition = str(part.get("Content-Disposition"))
+                if content_type == "text/plain" and "attachment" not in content_disposition:
+                    return part.get_payload(decode=True).decode(errors='ignore')
+        else:
+            return msg.get_payload(decode=True).decode(errors='ignore')
+        return ""
     
-    def send_answer(self,recipient:str,subject:str,text:str):
+    def send_answer(self, recipient: str, subject: str, text: str):
         try:
-            msg = MIMEText(text)
+            msg = MIMEText(text, 'plain', 'utf-8')
             msg["Subject"] = f"Re: {subject}"
             msg["From"] = self.user
             msg["To"] = recipient
@@ -63,4 +82,3 @@ class EmailService:
                 server.send_message(msg)
         except Exception as e:
             print(f"SMTP error: {e}")
-

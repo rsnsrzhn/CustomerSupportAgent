@@ -20,4 +20,4 @@ async def on_startup():
 async def redirect_to_docs():
     return RedirectResponse(url="/docs")
 
-app.include_router(router, prefix="/api/v1")
+app.include_router(router)
