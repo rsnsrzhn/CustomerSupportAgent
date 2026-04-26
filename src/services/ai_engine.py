@@ -9,7 +9,7 @@ class AIEngine:
     def __init__(self):
         self.vector_store = VectorStoreService()
         self.llm = ChatGroq(
-            api_key=settings.groq_api_key,
+            api_key=settings.GROQ_API_KEY,
             model_name="llama-3.1-8b-instant",
             temperature=0
         )
@@ -22,7 +22,7 @@ Use ONLY the provided context to answer the question.
 
 RULES:
 1. If the context is empty or does not contain the answer, reply with ONLY the word: ESCALATE.
-2. Do not use any outside knowledge (e.g., weather, news, general facts).
+2. Do not use any outside knowledge.
 3. Be concise and professional.
 
 CONTEXT:
