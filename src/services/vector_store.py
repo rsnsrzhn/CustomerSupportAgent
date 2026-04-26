@@ -8,7 +8,7 @@ from src.core.config import settings
 class VectorStoreService:
     def __init__(self):
         self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-        self.db_path = settings.vector_db_path
+        self.db_path = settings.VECTOR_DB_PATH
 
     def build_index(self, file_path: str):
         if not os.path.exists(file_path):

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Support Protocol</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; color: #333; font-family: 'Segoe UI', Roboto, sans-serif; }
+        .container { max-width: 1100px; margin-top: 50px; }
+        .log-card { background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .table thead { background-color: #f1f3f5; }
+        .status-badge { font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
+        .bg-escalated { background-color: #fff5f5; color: #e03131; border: 1px solid #ffc9c9; }
+        .bg-completed { background-color: #f4fce3; color: #2f9e44; border: 1px solid #d8f5a2; }
+        .text-truncate-custom { max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: help; }
+        .timestamp { color: #868e96; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="log-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="m-0 fw-bold">Support Activity Log</h4>
+            <span class="badge bg-dark">Total Logs: {{ logs|length }}</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Customer</th>
+                        <th>Question</th>
+                        <th>AI Response</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td class="timestamp">{{ log.created_at.strftime('%H:%M:%S %d.%m.%y') }}</td>
+                        <td class="fw-semibold">{{ log.user_email }}</td>
+                        <td><div class="text-truncate-custom" title="{{ log.message_text }}">{{ log.message_text }}</div></td>
+                        <td><div class="text-truncate-custom" title="{{ log.ai_answer }}">{{ log.ai_answer }}</div></td>
+                        <td class="text-center">
+                            <span class="status-badge {% if log.status == 'ESCALATED' %}bg-escalated{% else %}bg-completed{% endif %}">
+                                {{ log.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
